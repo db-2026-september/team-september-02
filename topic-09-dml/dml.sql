@@ -1,0 +1,31 @@
+-- ================================================================
+-- SQL DML TEMPLATE (TOPIC 09)
+-- ================================================================
+-- WHAT SHOULD BE ADDED HERE:
+-- 1) INSERT scripts for all required tables in your database.
+-- 2) At least 10 records per table with meaningful, realistic values.
+-- 3) UPDATE / DELETE scripts where they are relevant to business logic.
+-- 4) If UPDATE / DELETE are not relevant for a table, add a short note
+--    in documentation explaining why.
+-- 5) Comments by section so the script is easy to read and run.
+--
+-- SCRIPT GOALS:
+-- - Populate the database with usable test data.
+-- - Validate constraints through realistic DML scenarios.
+-- - Support the core functionality of your application.
+--
+-- RECOMMENDED ORDER:
+-- 1) Reference data (lookups/dictionaries)
+-- 2) Core entities
+-- 3) Transactional data
+-- 4) Optional UPDATE / DELETE checks
+--
+-- IMPORTANT:
+-- - Use anonymized or privacy-safe sample data where possible.
+-- - The script must execute in PostgreSQL.
+-- - Submit this as one SQL file.
+-- ================================================================
+
+-- Add your DML below this line
+
+

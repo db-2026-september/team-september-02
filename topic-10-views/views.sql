@@ -1,0 +1,35 @@
+-- ================================================================
+-- SQL VIEWS TEMPLATE (TOPIC 10)
+-- ================================================================
+-- WHAT SHOULD BE ADDED HERE:
+-- 1) CREATE VIEW scripts for required view types:
+--    - Horizontal view (select specific columns)
+--    - Vertical view (filter specific rows)
+--    - Mixed view (columns + row filters)
+--    - Join-based view (multiple tables)
+--    - Subquery-based view
+--    - UNION-based view
+--    - View based on another view
+--    - Updatable view with WITH CHECK OPTION
+--
+-- 2) Comments before each view explaining:
+--    - Purpose of the view
+--    - How it supports your project design
+--
+-- 3) Optional demo SELECT statements to show view output.
+--
+-- RECOMMENDED ORDER:
+-- 1) Simple views (horizontal / vertical / mixed)
+-- 2) Join and subquery views
+-- 3) UNION and layered views
+-- 4) CHECK OPTION view
+--
+-- IMPORTANT:
+-- - Script must execute in PostgreSQL without errors.
+-- - Keep naming consistent and readable.
+-- - Submit all views in this single SQL file.
+-- ================================================================
+
+-- Add your CREATE VIEW statements below this line
+
+

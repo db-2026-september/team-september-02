@@ -1,0 +1,87 @@
+name: AI Code Review
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Checkout student repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout prompts (private repo)
+        uses: actions/checkout@v4
+        with:
+          repository: OlhenShu/db-review-prompts
+          token: ${{ secrets.PROMPTS_TOKEN }}
+          path: .prompts
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Detect changed labs
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+          else
+            BASE=${{ github.event.before }}
+          fi
+
+          # First push in a repo created from template has BASE=000.. ; skip review once.
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed_labs=" >> $GITHUB_OUTPUT
+            echo "skip_reason=first_push" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CHANGED=""
+          declare -A LAB_MAP=(
+            ["topic-03-database_design"]="lab1"
+            ["topic-04-ddl"]="lab2"
+            ["topic-09-dml"]="lab3"
+            ["topic-10-views"]="lab4"
+            ["topic-11-database-administration"]="lab5"
+            ["topic-12-topic-functions-stored-procedures"]="lab6"
+          )
+
+          for FOLDER in "${!LAB_MAP[@]}"; do
+            if git diff --name-only "$BASE" HEAD | grep -q "^$FOLDER/"; then
+              KEY="${LAB_MAP[$FOLDER]}"
+              CHANGED="${CHANGED}${KEY},"
+            fi
+          done
+
+          # Якщо змінився головний README — перевіряємо всі лаби
+          if git diff --name-only "$BASE" HEAD | grep -q "^README.md$"; then
+            CHANGED="lab1,lab2,lab3,lab4,lab5,lab6"
+          fi
+
+          echo "changed_labs=${CHANGED%,}" >> $GITHUB_OUTPUT
+
+      - name: Run AI Review
+        if: steps.changed.outputs.changed_labs != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          CHANGED_LABS: ${{ steps.changed.outputs.changed_labs }}
+        run: python .github/scripts/review.py
