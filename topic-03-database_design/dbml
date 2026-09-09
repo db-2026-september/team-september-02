@@ -32,6 +32,168 @@
 //  Ref: posts.user_id > users.id
 //
 //  Повна документація: https://dbml.dbdiagram.io/docs/
+Project restaurant_management {
+  database_type: 'PostgreSQL'
+  Note: 'Author: DREAM TEAM'
+}
+
+// MVP TABLES
+Table locations_mvp {
+  location_id bigint [pk, increment]
+  name varchar(100) [not null]
+  address varchar(255) [not null]
+  is_active boolean [not null, default: true]
+}
+
+Table staff_mvp {
+  staff_id bigint [pk, increment]
+  location_id bigint [not null]
+  first_name varchar(80) [not null]
+  role varchar(30) [not null]
+}
+
+Table menu_items_mvp {
+  menu_item_id bigint [pk, increment]
+  name varchar(120) [not null]
+  category_id bigint [not null]
+  price decimal(8,2) [not null]
+  preparation_time_min smallint [not null]
+  is_available bool [not null, default: true]
+}
+
+Enum OrderStatus {
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+Table orders_mvp {
+  order_id bigint [pk, increment]
+  location_id bigint [not null]
+  customer_id bigint [note: 'Optional in MVP, dedicated for Final']
+  order_type varchar(20) [not null]
+  status OrderStatus [not null, default: 'PREPARING']
+  ordered_at timestamptz [not null, default: `now()`]
+  total_order_amount decimal(10,2)[not null, default: 0]
+}
+Table menu_categories_mvp {
+  category_id bigint [pk, increment]
+  name varchar(80) [not null, unique]
+  description varchar (256)
+}
+
+Table order_items_mvp {
+  order_item_id bigint [pk, increment]
+  order_id bigint [not null]
+  menu_item_id bigint [not null]
+  quantity int [not null]
+  item_price decimal(10,2) [not null]
+}
+
+// Виконує роль BasicInventory для MVP
+Table ingredients_mvp {
+  ingredient_id bigint [pk, increment]
+  name varchar(120) [not null, unique]
+  unit varchar(20) [not null]
+}
+
+// Нова таблиця: запаси на конкретних локаціях
+Table location_inventory_mvp {
+  location_id bigint [not null]
+  ingredient_id bigint [not null]
+  current_stock decimal(12,3) [not null, default: 0]
+  min_stock_level decimal(12,3) [not null, default: 0]
+  indexes {
+    (location_id, ingredient_id) [pk]
+  }
+}
+
+// FINAL TABLES
+Table customers_final {
+  customer_id bigint [pk, increment]
+  first_name varchar(80) [not null]
+  phone varchar(30)
+}
+
+Table suppliers_final {
+  supplier_id bigint [pk, increment]
+  name varchar(150) [not null]
+}
+
+Table supplier_ingredients_final {
+  supplier_id bigint [not null]
+  ingredient_id bigint [not null]
+  purchase_price decimal(10,2) [not null]
+  effective_date date [not null, default: `current_date`] // Додано для історії цін
+  indexes {
+    (supplier_id, ingredient_id, effective_date) [pk]
+  }
+}
+
+Table shift_schedules_final {
+  shift_id bigint [pk, increment]
+  location_id bigint [not null] // employees can move between branches
+  staff_id bigint [not null]
+  shift_date date [not null]
+  start_time time [not null]
+  end_time time [not null]
+}
+
+Table menu_item_ingredients_final {
+  menu_item_id bigint [not null]
+  ingredient_id bigint [not null]
+  quantity_demand decimal(10,3) [not null]
+  indexes {
+    (menu_item_id, ingredient_id) [pk]
+  }
+}
+Enum Ratings {
+  POOR
+  ACCEPTABLE
+  GOOD
+  DIVINE
+}
+Table customer_feedback_final {
+  feedback_id bigint [pk, increment]
+  customer_id bigint [not null]
+  location_id bigint [not null]
+  order_id bigint [note: 'Optional']
+  rating Ratings [not null]
+  comment text
+  created_at timestamptz [not null, default: `now()`]
+}
+// Згідно вимог по final вимогах щодо бронювань
+Table reservations_final {
+  reservation_id bigint [pk, increment]
+  location_id bigint [not null]
+  customer_id bigint [not null]
+  table_number varchar(10) [not null]
+  reservation_datetime timestamptz [not null]
+  guests_count smallint [not null]
+  status varchar(20) [not null, note: 'booked, seated, cancelled, completed']
+}
+
+Ref: staff_mvp.location_id > locations_mvp.location_id
+Ref: orders_mvp.location_id > locations_mvp.location_id
+Ref: orders_mvp.customer_id > customers_final.customer_id
+Ref: order_items_mvp.order_id > orders_mvp.order_id
+Ref: order_items_mvp.menu_item_id > menu_items_mvp.menu_item_id
+Ref: location_inventory_mvp.location_id > locations_mvp.location_id
+Ref: location_inventory_mvp.ingredient_id > ingredients_mvp.ingredient_id
+Ref: supplier_ingredients_final.supplier_id > suppliers_final.supplier_id
+Ref: supplier_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
+Ref: shift_schedules_final.staff_id > staff_mvp.staff_id
+Ref: reservations_final.location_id > locations_mvp.location_id
+Ref: reservations_final.customer_id > customers_final.customer_id
+Ref: shift_schedules_final.location_id > locations_mvp.location_id
+Ref: menu_items_mvp.category_id > menu_categories_mvp.category_id
+Ref: menu_item_ingredients_final.menu_item_id > menu_items_mvp.menu_item_id
+Ref: menu_item_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
+Ref: customer_feedback_final.customer_id > customers_final.customer_id
+Ref: customer_feedback_final.location_id > locations_mvp.location_id
+Ref: customer_feedback_final.order_id > orders_mvp.order_id
+
 // ══════════════════════════════════════════════════════════════════
 
 
