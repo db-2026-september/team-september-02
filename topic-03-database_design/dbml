@@ -32,6 +32,12 @@
 //  Ref: posts.user_id > users.id
 //
 //  Повна документація: https://dbml.dbdiagram.io/docs/
+// ══════════════════════════════════════════════════════════════════
+
+
+// Вставте ваш DBML-код нижче 👇
+
+
 Project restaurant_management {
   database_type: 'PostgreSQL'
   Note: 'Author: DREAM TEAM'
@@ -194,7 +200,3 @@ Ref: customer_feedback_final.customer_id > customers_final.customer_id
 Ref: customer_feedback_final.location_id > locations_mvp.location_id
 Ref: customer_feedback_final.order_id > orders_mvp.order_id
 
-// ══════════════════════════════════════════════════════════════════
-
-
-// Вставте ваш DBML-код нижче 👇
