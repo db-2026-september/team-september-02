@@ -7,11 +7,11 @@
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
-|Vikentii Kelevich| ... | Simple inventory tracking | ... |
-|Maksym Soloviov| ... | Menu items and categories | ... |
-|Vitaliy Fronts| ... | Basic restaurant location management | ... |
-|Valerii Kyrpychenko| ... | Staff management and basic scheduling | ... |
-|Oleksii Antypov| ... | Basic order processing — dine-in and takeaway | ... |
+|Vikentii Kelevich| SQL Developer | Simple inventory tracking | ... |
+|Maksym Soloviov| SQL Developer | Menu items and categories | ... |
+|Vitaliy Fronts| SQL Developer | Basic restaurant location management | ... |
+|Valerii Kyrpychenko| SQL Developer | Staff management and basic scheduling | ... |
+|Oleksii Antypov| SQL Developer | Basic order processing — dine-in and takeaway | ... |
 
 ## Контекст теми
 Опишіть, хто за яку частину відповідав.
