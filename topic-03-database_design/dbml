@@ -58,7 +58,7 @@ Table staff_mvp {
   last_name_st varchar(80) [not null]
   middle_name_st varchar(80)
   birth_date date [not null]
-  role varchar(30) [not null]
+  position_st varchar(30) [not null]
   phone varchar(30) [not null]
   email varchar(150) [not null]
   is_active_st boolean [not null, default: true, note: 'false = уволен']
