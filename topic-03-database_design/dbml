@@ -54,8 +54,14 @@ Table locations_mvp {
 Table staff_mvp {
   staff_id bigint [pk, increment]
   location_id bigint [not null]
-  first_name varchar(80) [not null]
+  first_name_st varchar(80) [not null]
+  last_name_st varchar(80) [not null]
+  middle_name_st varchar(80)
+  birth_date date [not null]
   role varchar(30) [not null]
+  phone varchar(30) [not null]
+  email varchar(150) [not null]
+  is_active_st boolean [not null, default: true, note: 'false = уволен']
 }
 
 Table menu_items_mvp {
@@ -81,7 +87,7 @@ Table orders_mvp {
   order_type varchar(20) [not null]
   status OrderStatus [not null, default: 'PREPARING']
   ordered_at timestamptz [not null, default: `now()`]
-  total_order_amount decimal(10,2)[not null, default: 0]
+  total_order_amount decimal(10,2) [not null, default: 0]
 }
 Table menu_categories_mvp {
   category_id bigint [pk, increment]
@@ -137,6 +143,13 @@ Table supplier_ingredients_final {
   }
 }
 
+Enum ShiftStatus {
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
 Table shift_schedules_final {
   shift_id bigint [pk, increment]
   location_id bigint [not null] // employees can move between branches
@@ -144,6 +157,10 @@ Table shift_schedules_final {
   shift_date date [not null]
   start_time time [not null]
   end_time time [not null]
+  actual_start_time time [note: 'Фактическое время прихода (по чипу/турникету)']
+  actual_end_time time [note: 'Фактическое время ухода']
+  break_time_minutes smallint [default: 0, note: 'Продолжительность перерыва в минутах']
+  status ShiftStatus [not null, default: 'SCHEDULED']
 }
 
 Table menu_item_ingredients_final {
