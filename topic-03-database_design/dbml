@@ -130,8 +130,8 @@ Table location_inventory_mvp {
 
 // FINAL TABLES
 Table customers_final {
-  customer_id bigint [pk, increment]
-  first_name varchar(80) [not null]
+  customer_id bigint [not null, pk, increment]
+  first_name varchar(80) [not null, note: 'default value Anonymous if client not identified']
   phone varchar(30)
 }
 
