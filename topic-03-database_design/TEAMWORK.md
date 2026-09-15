@@ -7,10 +7,10 @@
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
-|Vitaliy Fronts| SQL Developer | Simple inventory tracking, Basic restaurant location management | ... |
-|Maksym Soloviov| SQL Developer | Menu items and categories | ... |
-|Valerii Kyrpychenko| SQL Developer | Staff management and basic scheduling | ... |
-|Oleksii Antypov| SQL Developer | Basic order processing — dine-in and takeaway | ... |
+|Vitaliy Fronts| SQL Developer | Simple inventory tracking, Basic restaurant location management | `dbml` — `ingredients_mvp`, `location_inventory_mvp`, `locations_mvp` |
+|Maksym Soloviov| SQL Developer | Menu items and categories | `dbml` — `menu_items_mvp`, `menu_categories_mvp` |
+|Valerii Kyrpychenko| SQL Developer | Staff management and basic scheduling | `dbml` — `staff_mvp`, `shift_schedules_final` |
+|Oleksii Antypov| SQL Developer | Basic order processing — dine-in and takeaway | `dbml` — `orders_mvp`, `order_items_mvp`  |
 
 ## Контекст теми
 Опишіть, хто за яку частину відповідав.
