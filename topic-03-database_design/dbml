@@ -152,6 +152,7 @@ Table supplier_ingredients_final {
 
 Enum ShiftStatus {
   SCHEDULED
+  IN_PROGRESS
   COMPLETED
   NO_SHOW
   CANCELLED
