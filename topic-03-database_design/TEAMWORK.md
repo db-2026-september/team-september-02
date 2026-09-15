@@ -7,9 +7,8 @@
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
-|Vikentii Kelevich| SQL Developer | Simple inventory tracking | ... |
+|Vitaliy Fronts| SQL Developer | Simple inventory tracking, Basic restaurant location management | ... |
 |Maksym Soloviov| SQL Developer | Menu items and categories | ... |
-|Vitaliy Fronts| SQL Developer | Basic restaurant location management | ... |
 |Valerii Kyrpychenko| SQL Developer | Staff management and basic scheduling | ... |
 |Oleksii Antypov| SQL Developer | Basic order processing — dine-in and takeaway | ... |
 
