@@ -227,3 +227,7 @@ Ref: menu_item_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
 Ref: customer_feedback_final.customer_id > customers_final.customer_id
 Ref: customer_feedback_final.location_id > locations_mvp.location_id
 Ref: customer_feedback_final.order_id >? orders_mvp.order_id
+Ref: menu_item_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
+Ref: customer_feedback_final.customer_id > customers_final.customer_id
+Ref: customer_feedback_final.location_id > locations_mvp.location_id
+Ref: customer_feedback_final.order_id >? orders_mvp.order_id
