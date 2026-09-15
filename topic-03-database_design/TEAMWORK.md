@@ -13,7 +13,19 @@
 |Oleksii Antypov| SQL Developer | Basic order processing — dine-in and takeaway | `dbml` — `orders_mvp`, `order_items_mvp`, `customers_final`, `customer_feedback_final`, `reservations_final`  |
 
 ## Контекст теми
-Опишіть, хто за яку частину відповідав.
+Команда реалізує Variant 3 — Restaurant Management System.
+
+Розподіл відповідальності:
+
+- Vitaliy Fronts відповідав за блок локацій і складського обліку: `locations_mvp`, `ingredients_mvp`, `location_inventory_mvp`, `suppliers_final` та `supplier_ingredients_final`. Ця частина забезпечує облік інгредієнтів, їхніх запасів на різних локаціях, постачальників і закупівельних цін.
+
+- Maksym Soloviov відповідав за блок меню: `menu_items_mvp`, `menu_categories_mvp` та `menu_item_ingredients_final`. Ця частина описує категорії меню, страви, їхню вартість, час приготування та склад страв.
+
+- Valerii Kyrpychenko відповідав за блок персоналу: `staff_mvp` та `shift_schedules_final`. Ця частина зберігає дані працівників, їхню основну локацію та графіки запланованих і фактичних змін.
+
+- Oleksii Antypov відповідав за блок замовлень і клієнтської взаємодії: `orders_mvp`, `order_items_mvp`, `customers_final`, `customer_feedback_final` та `reservations_final`. Ця частина підтримує замовлення в ресторані й на виніс, позиції замовлень, дані клієнтів, відгуки та бронювання столиків.
+
+Команда спільно перевірила зв’язки між таблицями, первинні й зовнішні ключі, а також підготувала ER-діаграму бази даних.
 
 ## Коротке обґрунтування вибору початкового варіанта
 1. Чому команда обрала саме цей варіант:
