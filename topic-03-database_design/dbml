@@ -68,9 +68,9 @@ Table menu_items_mvp {
   menu_item_id bigint [pk, increment]
   name varchar(120) [not null]
   category_id bigint [not null]
-  price decimal(8,2) [not null]
+  price decimal(8,2) [not null, note: 'Must be greater than or equal to 0']
   preparation_time_min smallint [not null]
-  is_available bool [not null, default: true]
+  is_available boolean [not null, default: true]
 }
 
 Enum OrderStatus {
@@ -89,17 +89,20 @@ Table orders_mvp {
   order_id bigint [pk, increment]
   order_number bigint [not null]
   location_id bigint [not null]
-  customer_id bigint [not null, note: 'Optional in MVP, dedicated for Final']
+  customer_id bigint [not null, note: 'References a registered customer or a predefined Anonymous customer record']
   order_type OrderType [not null, default: 'DINE_IN']
   status OrderStatus [not null, default: 'PREPARING']
   ordered_at timestamptz [not null, default: `now()`]
-  total_order_amount decimal(10,2) [not null, default: 0]
+  total_order_amount decimal(10,2) [not null, default: 0, note: 'Calculated as SUM(quantity * item_price) from order_items_mvp']
+  indexes {
+  (location_id, order_number) [unique]
+}
 }
 
 Table menu_categories_mvp {
   category_id bigint [pk, increment]
   name varchar(80) [not null, unique]
-  description varchar (256)
+  description varchar(256)
 }
 
 Table order_items_mvp {
@@ -107,7 +110,7 @@ Table order_items_mvp {
   order_id bigint [not null]
   menu_item_id bigint [not null]
   quantity int [not null]
-  item_price decimal(10,2) [not null]
+  item_price decimal(10,2) [not null, note: 'Price of the menu item at the time of ordering']
 }
 
 // Виконує роль BasicInventory для MVP
@@ -121,8 +124,8 @@ Table ingredients_mvp {
 Table location_inventory_mvp {
   location_id bigint [not null]
   ingredient_id bigint [not null]
-  current_stock decimal(12,3) [not null, default: 0]
-  min_stock_level decimal(12,3) [not null, default: 0]
+  current_stock decimal(12,3) [not null, default: 0, note: 'Must be greater than or equal to 0']
+  min_stock_level decimal(12,3) [not null, default: 0, note: 'Must be greater than or equal to 0']
   indexes {
     (location_id, ingredient_id) [pk]
   }
@@ -130,8 +133,8 @@ Table location_inventory_mvp {
 
 // FINAL TABLES
 Table customers_final {
-  customer_id bigint [not null, pk, increment]
-  first_name varchar(80) [not null, note: 'default value Anonymous if client not identified']
+  customer_id bigint [pk, increment]
+  first_name varchar(80) [not null, note: 'For unidentified orders, use a predefined Anonymous customer record']
   phone varchar(30)
 }
 
@@ -143,7 +146,7 @@ Table suppliers_final {
 Table supplier_ingredients_final {
   supplier_id bigint [not null]
   ingredient_id bigint [not null]
-  purchase_price decimal(10,2) [not null]
+  purchase_price decimal(10,2) [not null, note: 'Must be greater than or equal to 0']
   effective_date date [not null, default: `current_date`] // Додано для історії цін
   indexes {
     (supplier_id, ingredient_id, effective_date) [pk]
@@ -167,14 +170,14 @@ Table shift_schedules_final {
   end_time time [not null]
   actual_start_time time [note: 'Фактическое время прихода (по чипу/турникету)']
   actual_end_time time [note: 'Фактическое время ухода']
-  break_time_minutes smallint [default: 0, note: 'Продолжительность перерыва в минутах']
+  break_time_minutes smallint [not null, default: 0, note: 'Продолжительность перерыва в минутах']
   status ShiftStatus [not null, default: 'SCHEDULED']
 }
 
 Table menu_item_ingredients_final {
   menu_item_id bigint [not null]
   ingredient_id bigint [not null]
-  quantity_demand decimal(10,3) [not null]
+  quantity_demand decimal(10,3) [not null, note: 'Quantity of ingredient required for one menu item; must be greater than 0']
   indexes {
     (menu_item_id, ingredient_id) [pk]
   }
@@ -189,7 +192,7 @@ Table customer_feedback_final {
   feedback_id bigint [pk, increment]
   customer_id bigint [not null]
   location_id bigint [not null]
-  order_id bigint [not null, note: 'Optional']
+  order_id bigint [note: 'Optional: NULL = general feedback']
   rating Ratings [not null]
   comment text
   created_at timestamptz [not null, default: `now()`]
@@ -223,5 +226,4 @@ Ref: menu_item_ingredients_final.menu_item_id > menu_items_mvp.menu_item_id
 Ref: menu_item_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
 Ref: customer_feedback_final.customer_id > customers_final.customer_id
 Ref: customer_feedback_final.location_id > locations_mvp.location_id
-Ref: customer_feedback_final.order_id > orders_mvp.order_id
-
+Ref: customer_feedback_final.order_id >? orders_mvp.order_id
