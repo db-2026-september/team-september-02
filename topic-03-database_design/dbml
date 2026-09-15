@@ -89,7 +89,7 @@ Table orders_mvp {
   order_id bigint [pk, increment]
   order_number bigint [not null]
   location_id bigint [not null]
-  customer_id bigint [not null, not nullnote: 'Optional in MVP, dedicated for Final']
+  customer_id bigint [note: 'Optional in MVP, dedicated for Final']
   order_type OrderType [not null, default: 'DINE_IN']
   status OrderStatus [not null, default: 'PREPARING']
   ordered_at timestamptz [not null, default: `now()`]
