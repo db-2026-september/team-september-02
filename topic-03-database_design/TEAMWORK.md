@@ -4,6 +4,10 @@
 - Команда: team-02
 - Варіант предметної області: Variant 3 — Restaurant Management System
 
+## ER-діаграма
+
+[Відкрити ER-діаграму Restaurant Management System](restaurant_management_ERD.pdf)
+
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
