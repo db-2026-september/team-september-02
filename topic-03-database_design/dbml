@@ -43,7 +43,36 @@ Project restaurant_management {
   Note: 'Author: DREAM TEAM'
 }
 
+
+// =================================
+// ENUMS
+// =================================
+
+Enum order_status {
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+Enum order_type {
+  DINE_IN
+  TAKEAWAY
+}
+
+Enum shift_status {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+
+// =================================
 // MVP TABLES
+// =================================
+
 Table locations_mvp {
   location_id bigint [pk, increment]
   name varchar(100) [not null]
@@ -54,49 +83,30 @@ Table locations_mvp {
 Table staff_mvp {
   staff_id bigint [pk, increment]
   location_id bigint [not null]
-  first_name_st varchar(80) [not null]
-  last_name_st varchar(80) [not null]
-  middle_name_st varchar(80)
-  birth_date_st date [not null]
-  position_st varchar(30) [not null]
-  phone_st varchar(30) [not null]
-  email_st varchar(150) [not null]
-  is_active_st boolean [not null, default: true, note: 'false = уволен']
-}
+  first_name varchar(80) [not null]
+  last_name varchar(80) [not null]
+  middle_name varchar(80)
+  birth_date date [not null]
+  position varchar(30) [not null]
+  phone varchar(30) [not null]
+  email varchar(150) [not null]
+  is_active boolean [not null, default: true, note: 'false = employee is no longer active']
 
-Table menu_items_mvp {
-  menu_item_id bigint [pk, increment]
-  name varchar(120) [not null]
-  category_id bigint [not null]
-  price decimal(8,2) [not null, note: 'Must be greater than or equal to 0']
-  preparation_time_min smallint [not null]
-  is_available boolean [not null, default: true]
-}
-
-Enum OrderStatus {
-  PREPARING
-  READY
-  COMPLETED
-  CANCELLED
-}
-
-Enum OrderType {
-  DINE_IN
-  TAKEAWAY
-}
-
-Table orders_mvp {
-  order_id bigint [pk, increment]
-  order_number bigint [not null]
-  location_id bigint [not null]
-  customer_id bigint [not null, note: 'References a registered customer or a predefined Anonymous customer record']
-  order_type OrderType [not null, default: 'DINE_IN']
-  status OrderStatus [not null, default: 'PREPARING']
-  ordered_at timestamptz [not null, default: `now()`]
-  total_order_amount decimal(10,2) [not null, default: 0, note: 'Calculated as SUM(quantity * item_price) from order_items_mvp']
   indexes {
-  (location_id, order_number) [unique]
+    location_id
+  }
 }
+
+Table customers_mvp {
+  customer_id bigint [pk, increment]
+  first_name varchar(80) [not null, note: 'For anonymous orders, use a predefined Anonymous customer record']
+  last_name varchar(80)
+  phone varchar(30)
+  email varchar(150)
+
+  indexes {
+    email [unique]
+  }
 }
 
 Table menu_categories_mvp {
@@ -105,125 +115,206 @@ Table menu_categories_mvp {
   description varchar(256)
 }
 
+Table menu_items_mvp {
+  menu_item_id bigint [pk, increment]
+  name varchar(120) [not null]
+  category_id bigint [not null]
+  price numeric(10,2) [not null, check: `price >= 0`]
+  preparation_time_min smallint [not null, check: `preparation_time_min > 0`]
+  is_available boolean [not null, default: true]
+
+  indexes {
+    category_id
+  }
+}
+
+Table orders_mvp {
+  order_id bigint [pk, increment]
+  order_number bigint [not null]
+  location_id bigint [not null]
+  customer_id bigint [not null, note: 'References a registered customer or a predefined Anonymous customer record']
+  order_type order_type [not null, default: 'DINE_IN']
+  status order_status [not null, default: 'PREPARING']
+  ordered_at timestamptz [not null, default: `now()`]
+  total_order_amount numeric(10,2) [not null, default: 0, check: `total_order_amount >= 0`, note: 'Calculated as SUM(quantity * item_price) from order_items_mvp']
+
+  indexes {
+    (location_id, order_number) [unique]
+    location_id
+    customer_id
+  }
+}
+
 Table order_items_mvp {
   order_item_id bigint [pk, increment]
   order_id bigint [not null]
   menu_item_id bigint [not null]
-  quantity int [not null]
-  item_price decimal(10,2) [not null, note: 'Price of the menu item at the time of ordering']
+  quantity int [not null, check: `quantity > 0`]
+  item_price numeric(10,2) [not null, check: `item_price >= 0`, note: 'Price of the menu item at the time of ordering']
+
+  indexes {
+    order_id
+    menu_item_id
+  }
 }
 
-// Виконує роль BasicInventory для MVP
 Table ingredients_mvp {
   ingredient_id bigint [pk, increment]
   name varchar(120) [not null, unique]
   unit varchar(20) [not null]
 }
 
-// Нова таблиця: запаси на конкретних локаціях
 Table location_inventory_mvp {
   location_id bigint [not null]
   ingredient_id bigint [not null]
-  current_stock decimal(12,3) [not null, default: 0, note: 'Must be greater than or equal to 0']
-  min_stock_level decimal(12,3) [not null, default: 0, note: 'Must be greater than or equal to 0']
+  current_stock numeric(12,3) [not null, default: 0, check: `current_stock >= 0`]
+  min_stock_level numeric(12,3) [not null, default: 0, check: `min_stock_level >= 0`]
+
   indexes {
     (location_id, ingredient_id) [pk]
+    ingredient_id
   }
 }
 
+
+// =================================
 // FINAL TABLES
-Table customers_final {
-  customer_id bigint [pk, increment]
-  first_name varchar(80) [not null, note: 'For unidentified orders, use a predefined Anonymous customer record']
-  phone varchar(30)
-}
+// =================================
 
 Table suppliers_final {
   supplier_id bigint [pk, increment]
   name varchar(150) [not null]
+  phone varchar(30)
+  email varchar(150)
+  address varchar(255)
 }
 
 Table supplier_ingredients_final {
   supplier_id bigint [not null]
   ingredient_id bigint [not null]
-  purchase_price decimal(10,2) [not null, note: 'Must be greater than or equal to 0']
-  effective_date date [not null, default: `current_date`] // Додано для історії цін
+  purchase_price numeric(10,2) [not null, check: `purchase_price >= 0`]
+  effective_date date [not null, default: `current_date`]
+
   indexes {
     (supplier_id, ingredient_id, effective_date) [pk]
+    ingredient_id
   }
-}
 
-Enum ShiftStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  NO_SHOW
-  CANCELLED
+  Note: 'Stores purchase price history for ingredients'
 }
 
 Table shift_schedules_final {
   shift_id bigint [pk, increment]
-  location_id bigint [not null] // employees can move between branches
+  location_id bigint [not null]
   staff_id bigint [not null]
-  shift_date date [not null]
-  start_time time [not null]
-  end_time time [not null]
-  actual_start_time time [note: 'Фактическое время прихода (по чипу/турникету)']
-  actual_end_time time [note: 'Фактическое время ухода']
-  break_time_minutes smallint [not null, default: 0, note: 'Продолжительность перерыва в минутах']
-  status ShiftStatus [not null, default: 'SCHEDULED']
+
+  start_at timestamptz [not null]
+  end_at timestamptz [not null, check: `end_at > start_at`]
+
+  actual_start_time time [note: 'Actual employee arrival time']
+  actual_end_time time [note: 'Actual employee departure time']
+
+  break_time_minutes smallint [not null, default: 0, check: `break_time_minutes >= 0`]
+  status shift_status [not null, default: 'SCHEDULED']
+
+  indexes {
+    staff_id
+    location_id
+    (staff_id, start_at) [unique]
+  }
+
+  Note: 'Full timestamps support overnight shifts, for example 22:00 on one date to 06:00 on the next date'
 }
 
 Table menu_item_ingredients_final {
   menu_item_id bigint [not null]
   ingredient_id bigint [not null]
-  quantity_demand decimal(10,3) [not null, note: 'Quantity of ingredient required for one menu item; must be greater than 0']
+  quantity_demand numeric(10,3) [not null, check: `quantity_demand > 0`, note: 'Quantity of ingredient required for one menu item']
+
   indexes {
     (menu_item_id, ingredient_id) [pk]
+    ingredient_id
   }
 }
-Enum Ratings {
-  POOR
-  ACCEPTABLE
-  GOOD
-  DIVINE
-}
+
 Table customer_feedback_final {
   feedback_id bigint [pk, increment]
   customer_id bigint [not null]
   location_id bigint [not null]
   order_id bigint [note: 'Optional: NULL = general feedback']
-  rating Ratings [not null]
+  rating smallint [not null, check: `rating BETWEEN 1 AND 5`]
   comment text
   created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    customer_id
+    location_id
+    order_id
+  }
 }
-// Згідно вимог по final вимогах щодо бронювань
+
+Table restaurant_tables_final {
+  location_id bigint [not null]
+  table_number varchar(10) [not null]
+  seats_count smallint [not null, check: `seats_count > 0`]
+
+  indexes {
+    (location_id, table_number) [pk]
+  }
+}
+
 Table reservations_final {
   reservation_id bigint [pk, increment]
   location_id bigint [not null]
   customer_id bigint [not null]
   table_number varchar(10) [not null]
   reservation_datetime timestamptz [not null]
-  guests_count smallint [not null]
+  guests_count smallint [not null, check: `guests_count > 0`]
   status varchar(20) [not null, note: 'booked, seated, cancelled, completed']
+
+  indexes {
+    (location_id, table_number, reservation_datetime) [unique]
+    customer_id
+  }
+
+  Note: 'guests_count must be less than or equal to seats_count of the selected restaurant table'
 }
 
+
+// MVP relationships
 Ref: staff_mvp.location_id > locations_mvp.location_id
+
 Ref: orders_mvp.location_id > locations_mvp.location_id
-Ref: orders_mvp.customer_id > customers_final.customer_id
+Ref: orders_mvp.customer_id > customers_mvp.customer_id
+
 Ref: order_items_mvp.order_id > orders_mvp.order_id
 Ref: order_items_mvp.menu_item_id > menu_items_mvp.menu_item_id
+
+Ref: menu_items_mvp.category_id > menu_categories_mvp.category_id
+
 Ref: location_inventory_mvp.location_id > locations_mvp.location_id
 Ref: location_inventory_mvp.ingredient_id > ingredients_mvp.ingredient_id
+
+// Final relationships
 Ref: supplier_ingredients_final.supplier_id > suppliers_final.supplier_id
 Ref: supplier_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
-Ref: shift_schedules_final.staff_id > staff_mvp.staff_id
-Ref: reservations_final.location_id > locations_mvp.location_id
-Ref: reservations_final.customer_id > customers_final.customer_id
+
 Ref: shift_schedules_final.location_id > locations_mvp.location_id
-Ref: menu_items_mvp.category_id > menu_categories_mvp.category_id
+Ref: shift_schedules_final.staff_id > staff_mvp.staff_id
+
 Ref: menu_item_ingredients_final.menu_item_id > menu_items_mvp.menu_item_id
 Ref: menu_item_ingredients_final.ingredient_id > ingredients_mvp.ingredient_id
+
+Ref: customer_feedback_final.customer_id > customers_mvp.customer_id
+Ref: customer_feedback_final.location_id > locations_mvp.location_id
+Ref: customer_feedback_final.order_id >? orders_mvp.order_id
+
+Ref: restaurant_tables_final.location_id > locations_mvp.location_id
+
+Ref: reservations_final.location_id > locations_mvp.location_id
+Ref: reservations_final.customer_id > customers_mvp.customer_id
+
+Ref: reservations_final.(location_id, table_number) > restaurant_tables_final.(location_id, table_number)
 Ref: customer_feedback_final.customer_id > customers_final.customer_id
 Ref: customer_feedback_final.location_id > locations_mvp.location_id
 Ref: customer_feedback_final.order_id >? orders_mvp.order_id
