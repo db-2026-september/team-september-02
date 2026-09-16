@@ -6,6 +6,7 @@
 
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
+|---|---|---|---|
 |Vitaliy Fronts|SQL Developer|Simple inventory tracking, Basic restaurant location management|dbml — locations_mvp, ingredients_mvp, location_inventory_mvp, suppliers_final, supplier_ingredients_final|
 | Maksym Soloviov |SQL Developer | Menu items and categories and plus write code scheme  | dbml — menu_items_mvp, menu_categories_mvp, menu_item_ingredients_final |
 | Valerii Kyrpychenko | SQL Developer | Staff management and basic scheduling |dbml — staff_mvp, shift_schedules_final|
