@@ -315,6 +315,3 @@ Ref: reservations_final.location_id > locations_mvp.location_id
 Ref: reservations_final.customer_id > customers_mvp.customer_id
 
 Ref: reservations_final.(location_id, table_number) > restaurant_tables_final.(location_id, table_number)
-Ref: customer_feedback_final.customer_id > customers_final.customer_id
-Ref: customer_feedback_final.location_id > locations_mvp.location_id
-Ref: customer_feedback_final.order_id >? orders_mvp.order_id
