@@ -22,29 +22,25 @@ CREATE TABLE shift_schedules_final(
     shift_id bigserial PRIMARY KEY,
     location_id bigint NOT NULL REFERENCES locations_mvp(location_id),
     staff_id bigint NOT NULL REFERENCES staff_mvp(staff_id),
-    shift_date date NOT NULL,
-    start_time timestamp NOT NULL,
-    end_time timestamp NOT NULL,
-    actual_start_time timestamp,
-    actual_end_time timestamp,
+    start_time timestamptz NOT NULL,
+    end_time timestamptz NOT NULL,
+    actual_start_time timestamptz,
+    actual_end_time timestamptz,
     break_time_minutes smallint DEFAULT 0 CHECK (break_time_minutes >= 0),
     status shift_status NOT NULL DEFAULT 'SCHEDULED',
 
     CONSTRAINT chk_shift_time 
     CHECK (end_time > start_time),
 
-    CONSTRAINT chk_shift_date
-    CHECK (shift_date = start_time::date),
-
     CONSTRAINT chk_actual_time_consistency
     CHECK ((actual_end_time IS NULL OR actual_start_time IS NOT NULL)
     AND (actual_end_time > actual_start_time) ),
 
     CONSTRAINT uq_shift_staff_slot
-    UNIQUE (staff_id, shift_date, start_time)
+    UNIQUE (staff_id, start_time)
 );
 
 CREATE INDEX idx_shift_staff ON shift_schedules_final(staff_id);
 CREATE INDEX idx_shift_location ON shift_schedules_final(location_id);
-CREATE INDEX idx_shift_date ON shift_schedules_final(shift_date);
-CREATE INDEX idx_shift_location_date ON shift_schedules_final(location_id, shift_date);
+CREATE INDEX idx_shift_date ON shift_schedules_final((start_time::date));
+CREATE INDEX idx_shift_location_date ON shift_schedules_final(location_id, (start_time::date));
