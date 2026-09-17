@@ -88,12 +88,13 @@ Table staff_mvp {
   middle_name varchar(80)
   birth_date date [not null]
   position varchar(30) [not null]
-  phone varchar(30) [not null]
-  email varchar(150) [not null]
-  is_active boolean [not null, default: true, note: 'false = employee is no longer active']
+  phone varchar(30) [not null, unique]
+  email varchar(150) [not null, unique]
+  is_active boolean [default: true]
 
   indexes {
     location_id
+    (last_name, first_name, birth_date) [name: 'idx_staff_name_birth']
   }
 }
 
@@ -208,11 +209,11 @@ Table shift_schedules_final {
   location_id bigint [not null]
   staff_id bigint [not null]
 
-  start_at timestamptz [not null]
-  end_at timestamptz [not null, check: `end_at > start_at`]
+  start_time timestamptz [not null]
+  end_time timestamptz [not null, note: 'CHECK: end_time > start_time']
 
-  actual_start_time time [note: 'Actual employee arrival time']
-  actual_end_time time [note: 'Actual employee departure time']
+  actual_start_time timestamptz [note: 'Actual employee arrival time']
+  actual_end_time timestamptz [note: 'Actual employee departure time; CHECK: end requires start, and end > start when both present']
 
   break_time_minutes smallint [not null, default: 0, check: `break_time_minutes >= 0`]
   status shift_status [not null, default: 'SCHEDULED']
@@ -220,10 +221,10 @@ Table shift_schedules_final {
   indexes {
     staff_id
     location_id
-    (staff_id, start_at) [unique]
+    (staff_id, start_time) [unique, name: 'uq_shift_staff_slot']
   }
 
-  Note: 'Full timestamps support overnight shifts, for example 22:00 on one date to 06:00 on the next date'
+  Note: 'timestamptz supports overnight shifts natively (e.g. 22:00 one date to 06:00 the next). Date-only lookups use expression indexes idx_shift_date and idx_shift_location_date on (start_time::date), not shown in DBML syntax.'
 }
 
 Table menu_item_ingredients_final {
