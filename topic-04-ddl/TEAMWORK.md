@@ -7,24 +7,26 @@
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
-|Vitaliy Fronts|SQL Developer|Simple inventory tracking, Basic restaurant location management|dbml — locations_mvp, ingredients_mvp, location_inventory_mvp, suppliers_final, supplier_ingredients_final|
-| Maksym Soloviov |SQL Developer | Menu items and categories and plus write code scheme  | dbml — menu_items_mvp, menu_categories_mvp, menu_item_ingredients_final |
-| Valerii Kyrpychenko | SQL Developer | Staff management and basic scheduling |dbml — staff_mvp, shift_schedules_final|
-| Oleksii Antypov | SQL Developer | Basic order processing — dine-in and takeaway| dbml — orders_mvp, order_items_mvp, customers_final, customer_feedback_final, reservations_final |
+|Vitaliy Fronts|SQL Developer|Реалізація DDL для блоку локацій, складського обліку та постачальників (`locations`, `ingredients`, `location_inventory`, `suppliers`)|`ddl.sql` (секція: Локації та склад)|
+| Maksym Soloviov |SQL Developer | Реалізація DDL для блоку меню, категорій та інгредієнтів страв (`menu_items`, `menu_categories`, `menu_item_ingredients`)  | `ddl.sql` (секція: Меню та страви) |
+| Valerii Kyrpychenko | SQL Developer | Реалізація DDL для блоку персоналу та графіків роботи (`staff`, `shift_schedules`) |`ddl.sql` (секція: Персонал), `snippets_valerii.sql`|
+| Oleksii Antypov | SQL Developer | Реалізація DDL для блоку замовлень, клієнтської бази, відгуків та бронювань (`orders`, `order_items`, `customers`, `customer_feedback`, `reservations`)| `ddl.sql` (секція: Замовлення та клієнти) |
 
 ## Контекст теми
 
 Розподіл відповідальності:
 
-Vitaliy Fronts відповідав за блок локацій і складського обліку: locations_mvp, ingredients_mvp, location_inventory_mvp, suppliers_final та supplier_ingredients_final. Ця частина забезпечує облік інгредієнтів, їхніх запасів на різних локаціях, постачальників і закупівельних цін.
+Vitaliy Fronts написав DDL-структури для локацій ресторану, складських залишків та обліку постачальників, налаштувавши відповідні зовнішні ключі (Foreign Keys) до складських позицій.
 
-Maksym Soloviov відповідав за блок меню: menu_items_mvp, menu_categories_mvp та menu_item_ingredients_final. Ця частина описує категорії меню, страви, їхню вартість, час приготування та склад страв.
+Maksym Soloviov реалізував схему для меню, категорій та зв'язуючої таблиці рецептур/інгредієнтів страв із урахуванням унікальних обмежень та каскадного видалення..
 
-Valerii Kyrpychenko відповідав за блок персоналу: staff_mvp та shift_schedules_final. Ця частина зберігає дані працівників, їхню основну локацію та графіки запланованих і фактичних змін.
+Valerii Kyrpychenko розгорнув таблиці для управління персоналом та гнучким плануванням робочих графіків (змін), зафіксувавши їх у загальному скрипті та додаткових робочих сніпетах.
 
-Oleksii Antypov відповідав за блок замовлень і клієнтської взаємодії: orders_mvp, order_items_mvp, customers_final, customer_feedback_final та reservations_final. Ця частина підтримує замовлення в ресторані й на виніс, позиції замовлень, дані клієнтів, відгуки та бронювання столиків.
+Oleksii Antypov спроєктував складний реляційний блок замовлень, позицій у чеку, профілів клієнтів, систем оцінювання/відгуків та бронювання столиків.
+
+Команда спільно інтегрувала всі модулі в єдиний виконуваний скрипт `ddl.sql`, перевірила сумісність із PostgreSQL, узгодила порядок створення таблиць (з урахуванням залежностей зовнішніх ключів) та додала індекси для оптимізації ключових бізнес-запитів.
 
 ## Коротке обґрунтування командного підходу
-1. Як ви розподілили DDL-об'єкти між учасниками: ...
-2. Чому обрали саме такий поділ роботи: ...
-3. Як перевіряли відповідність DDL вашій ER-діаграмі: ...
+1. Як ви розподілили DDL-об'єкти між учасниками: На основі розподілу ролей у Topic 3 кожен учасник досконало володіє специфікою «своєї» частини бізнес-логіки. .
+2. Чому обрали саме такий поділ роботи: ..Закріплення написання DDL за тими ж людьми усунуло ризики непорозуміння зв'язків між сутностями та написання обмежень (`CHECK`, `FOREIGN KEY`, `UNIQUE`).
+3. Як перевіряли відповідність DDL вашій ER-діаграмі: Поділ єдиного файлу `ddl.sql` на логічні блоки дозволив паралельно написати код для різних підсистем ресторану, після чого команда провела спільне код-рев'ю, звели всі сутності в єдину послідовність виконання та переконалися у відсутності помилок під час виконання у середовищі PostgreSQL.
