@@ -7,7 +7,7 @@
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
 |---|---|---|---|
-|Vitaliy Fronts|SQL Developer|Реалізація DDL для блоку локацій, складського обліку та постачальників (`locations`, `ingredients`, `location_inventory`, `suppliers`)|`ddl.sql` (секція: Локації та склад)|
+|Vitaliy Fronts|SQL Developer|Реалізація DDL для блоку локацій, складського обліку та постачальників (`locations`, `location_inventory`, `suppliers`)|`ddl.sql` (секція: Локації та склад)|
 | Maksym Soloviov |SQL Developer | Реалізація DDL для блоку меню, категорій та інгредієнтів страв (`menu_items`, `menu_categories`, `ingredients`, `menu_item_ingredients`)  | `ddl.sql` (секція: Меню та страви) |
 | Valerii Kyrpychenko | SQL Developer | Реалізація DDL для блоку персоналу та графіків роботи (`staff`, `shift_schedules`) |`ddl.sql` (секція: Персонал), `snippets_valerii.sql`|
 | Oleksii Antypov | SQL Developer | Реалізація DDL для блоку замовлень, клієнтської бази, відгуків та бронювань (`orders`, `order_items`, `customers`, `customer_feedback`, `reservations`, `restaurant_tables`)| `ddl.sql` (секція: Замовлення та клієнти) |
