@@ -288,7 +288,6 @@ COMMENT ON COLUMN orders.customer_id IS 'References a registered customer or a p
 
 ----
 ALTER TABLE location_inventory ADD FOREIGN KEY (ingredient_id) REFERENCES ingredients (ingredient_id);
-ALTER TABLE location_inventory ADD FOREIGN KEY (location_id) REFERENCES locations (location_id);
 ALTER TABLE supplier_ingredients ADD FOREIGN KEY (supplier_id) REFERENCES suppliers (supplier_id);
 ALTER TABLE supplier_ingredients ADD FOREIGN KEY (ingredient_id) REFERENCES ingredients (ingredient_id);
 
