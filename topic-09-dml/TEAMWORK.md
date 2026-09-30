@@ -6,6 +6,7 @@
 
 ## Таблиця внесків
 | Учасник | Роль у команді | Що зроблено | Артефакти / файли |
+|---|---|---|---|
 | Oleksii Antypov | SQL Developer | Реалізація DML-операцій (INSERT, UPDATE, DELETE), тестових даних та перевірки constraints для блоку замовлень, клієнтської бази, відгуків та бронювань (orders, order_items, customers, customer_feedback, reservations, restaurant_tables) | dml.sql (секція: Замовлення та клієнти) |
 | Vitaliy Fronts | SQL Developer | Реалізація DML-операцій (INSERT, UPDATE, DELETE), тестових даних та перевірки constraints для блоку локацій, складського обліку та постачальників (locations, location_inventory, suppliers, supplier_ingredients) | dml.sql (секція: Локації та склад) |
 | Maksym Soloviov | SQL Developer | Реалізація DML-операцій (INSERT, UPDATE, DELETE), тестових даних та перевірки constraints для блоку меню, категорій та інгредієнтів страв (menu_items, menu_categories, ingredients, menu_item_ingredients) | dml.sql (секція: Меню та страви) |
