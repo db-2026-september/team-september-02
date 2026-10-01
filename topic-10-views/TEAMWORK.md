@@ -41,4 +41,5 @@
    Контроль конфлікту стовпців: У складному представленні detailed_orders_view окремо перевіряв у DBeaver, щоб однакове поле order_id з таблиць orders та order_items мало чіткий аліас o.order_id, інакше PostgreSQL видавав синтаксичну помилку через неоднозначність імені (ambiguous column).
    
    Перевірка дворівневої логіки (View from View): У DBeaver спочатку перевірив базове представлення location_inventory_detailed_view (чи правильно підтягуються назви інгредієнтів до залишків), а потім протестував location_inventory_summary_view, щоб переконатися, що групування через GROUP BY та функція SUM(is_below_minimum) коректно рахують підсумковий дефіцит по закладах.
+   
    Негативний тест для CHECK OPTION: У вікні редактора DBeaver перевірив поведінку active_locations_view: успішно виконав INSERT для активної локації зі значенням is_active = true, а потім виконав запит із is_active = false. Переконався, що PostgreSQL викидає помилку порушення обмеження (new row violates check option for view) і блокує некоректний запис.
