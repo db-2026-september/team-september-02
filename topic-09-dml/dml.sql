@@ -60,17 +60,17 @@ VALUES
 -- ----------------------------------------------------------------
 INSERT INTO locations (name, address, is_active)
 VALUES
-  ('Lviv Central Coffee Lab',       'м. Львів, пл. Ринок, 14',             true),
-  ('Lviv Sykhiv Bistro & Bakery',    'м. Львів, просп. Червоної Калини, 60',  true),
-  ('Kyiv Khreshchatyk Flagship',    'м. Київ, вул. Хрещатик, 22',           true),
-  ('Kyiv Podil Gastro Corner',      'м. Київ, вул. Петра Сагайдачного, 11',  true),
-  ('Kyiv Obolon Family Hub',        'м. Київ, Оболонський просп., 1Б',       true),
-  ('Odesa Derybasivska Lounge',     'м. Одеса, вул. Дерибасівська, 16',      true),
-  ('Dnipro Yavornytskoho Bistro',   'м. Дніпро, просп. Д. Яворницького, 48',  true),
-  ('Ivano-Frankivsk Urban Cafe',    'м. Івано-Франківськ, вул. Сотника Мартинця, 4', true),
-  ('Ternopil Lake Terrace',         'м. Тернопіль, вул. Руська, 17',         true),
-  ('Uzhhorod Castle View Point',    'м. Ужгород, вул. Корзо, 9',            true),
-  ('Lviv Arena Express (Seasonal)', 'м. Львів, вул. Стрийська, 199',        false);
+  (1, 'Lviv Central Coffee Lab',       'м. Львів, пл. Ринок, 14',             true),
+  (2, 'Lviv Sykhiv Bistro & Bakery',    'м. Львів, просп. Червоної Калини, 60',  true),
+  (3, 'Kyiv Khreshchatyk Flagship',    'м. Київ, вул. Хрещатик, 22',           true),
+  (4, 'Kyiv Podil Gastro Corner',      'м. Київ, вул. Петра Сагайдачного, 11',  true),
+  (5, 'Kyiv Obolon Family Hub',        'м. Київ, Оболонський просп., 1Б',       true),
+  (6, 'Odesa Derybasivska Lounge',     'м. Одеса, вул. Дерибасівська, 16',      true),
+  (7, 'Dnipro Yavornytskoho Bistro',   'м. Дніпро, просп. Д. Яворницького, 48',  true),
+  (8, 'Ivano-Frankivsk Urban Cafe',    'м. Івано-Франківськ, вул. Сотника Мартинця, 4', true),
+  (9, 'Ternopil Lake Terrace',         'м. Тернопіль, вул. Руська, 17',         true),
+  (10, 'Uzhhorod Castle View Point',    'м. Ужгород, вул. Корзо, 9',            true),
+  (11, 'Lviv Arena Express (Seasonal)', 'м. Львів, вул. Стрийська, 199',        false);
 
 
 -- ----------------------------------------------------------------
