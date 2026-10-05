@@ -58,7 +58,7 @@ VALUES
 -- 1. INSERT: LOCATIONS (from google)
 -- Поле location_id генерується автоматично
 -- ----------------------------------------------------------------
-INSERT INTO locations (name, address, is_active)
+INSERT INTO locations (location_id, name, address, is_active)
 VALUES
   (1, 'Lviv Central Coffee Lab',       'м. Львів, пл. Ринок, 14',             true),
   (2, 'Lviv Sykhiv Bistro & Bakery',    'м. Львів, просп. Червоної Калини, 60',  true),
