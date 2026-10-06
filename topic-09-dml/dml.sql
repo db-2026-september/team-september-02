@@ -45,7 +45,9 @@
 -- delete from public.menu_items; 
 -- delete from public.menu_categories; 
 
-
+/*******************************************************************
+Vitaliy Fronts
+*******************************************************************/
 -- 0. ПІДГОТОВКА: ТЕСТОВІ ІНГРЕДІЄНТИ (REFERENCE DATA)
 -- Оскільки location_inventory та supplier_ingredients залежать від таблиці ingredients,
 -- додаємо базовий набір продуктів.
