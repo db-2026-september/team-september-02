@@ -470,3 +470,94 @@ EXCEPTION
   WHEN with_check_option_violation THEN RAISE NOTICE '[OK] CHECK OPTION (INSERT): %', SQLERRM;
   WHEN raise_exception             THEN RAISE NOTICE '[FAIL] CHECK OPTION (INSERT)';
 END $$;
+
+
+
+
+
+-- ================================================================
+-- Topic: Database Views lesson 10
+-- Author: Oleksii Antypov
+-- ================================================================
+
+-- DROP VIEW IF EXISTS orders_view;
+-- DROP VIEW IF EXISTS customers_view;
+-- DROP VIEW IF EXISTS reservations_view;
+-- DROP VIEW IF EXISTS city_totals_view;
+-- DROP VIEW IF EXISTS orders_details_view;
+-- DROP VIEW IF EXISTS lviv_orders_view;
+
+------------------------------------------------------------------
+-- 1. Horizontal view
+------------------------------------------------------------------
+create view orders_view as
+select 
+  order_number
+  ,order_type
+  ,ordered_at
+  ,total_order_amount
+from public.orders;
+
+------------------------------------------------------------------
+-- 2. Vertical view
+------------------------------------------------------------------
+create view customers_view as
+select 
+  first_name
+  ,last_name
+  ,phone
+from public.customers
+where first_name != 'Анонім';
+
+------------------------------------------------------------------
+-- 3. Mixed view
+------------------------------------------------------------------
+create view reservations_view as
+select 
+  reservation_datetime
+  ,guests_count
+from public.reservations
+where guests_count >= 5;
+
+------------------------------------------------------------------
+-- 4. View that joins multiple tables
+------------------------------------------------------------------
+create view orders_details_view as
+SELECT 
+  l.name
+  ,o.order_type
+  ,o.status
+  ,oi.quantity
+  ,oi.item_price
+  ,o.total_order_amount
+FROM orders o
+left join order_items oi on o.order_id = oi.order_id
+left join locations l on l.location_id = o.location_id;
+
+------------------------------------------------------------------
+-- 5. View using a subquery
+------------------------------------------------------------------
+create view lviv_orders_view as
+SELECT 
+  'Lviv' as city
+  ,order_number
+  ,order_type
+  ,ordered_at
+  ,total_order_amount
+FROM orders
+where location_id in (select location_id 
+                      from locations
+                      where name like '%Lviv%')
+;
+
+------------------------------------------------------------------
+-- 6. Layered view (View selecting from another view)
+------------------------------------------------------------------
+create view city_totals_view as
+select
+  split_part(name, ' ', 1) as city
+  ,sum(quantity) as total_quantity
+  ,sum(total_order_amount) as total_amount
+from orders_details_view
+group by city
+order by total_amount desc;
