@@ -32,9 +32,51 @@
 
 -- Add your CREATE VIEW statements below this line
 
+
 -- ================================================================
--- Topic: Database Views lesson 10
--- Author: Fronts Vitaliy
+-- Максим: меню, категорії та базові в'юшки
+-- ================================================================
+
+DROP VIEW IF EXISTS deserts_category_view;
+DROP VIEW IF EXISTS join_tables_view;
+DROP VIEW IF EXISTS menu_mixed_view;
+DROP VIEW IF EXISTS menu_vertical_view;
+DROP VIEW IF EXISTS menu_horizontal_view;
+
+-- 1. Швидкі страви (готуються до 20 хв)
+CREATE OR REPLACE VIEW menu_horizontal_view AS
+SELECT *
+FROM menu_items
+WHERE preparation_time_min <= 20;
+
+-- 2. Тільки назви та категорії (без описів)
+CREATE OR REPLACE VIEW menu_vertical_view AS
+SELECT category_id, name
+FROM menu_categories;
+
+-- 3. Доступні страви дорожчі за 300 грн
+CREATE OR REPLACE VIEW menu_mixed_view AS
+SELECT name, price, is_available
+FROM menu_items
+WHERE price > 300 AND is_available = TRUE;
+
+-- 4. Зв'язуємо страви з їхніми категоріями через JOIN
+CREATE OR REPLACE VIEW join_tables_view AS
+SELECT menu_items.name AS dish_name, menu_categories.name AS category_name
+FROM menu_items
+JOIN menu_categories
+  ON menu_items.category_id = menu_categories.category_id;
+
+-- 8. Десерти до 265 грн з захистом (CHECK OPTION)
+CREATE OR REPLACE VIEW deserts_category_view AS
+SELECT *
+FROM menu_items
+WHERE category_id = 5 AND price < 265
+WITH CHECK OPTION;
+
+
+-- ================================================================
+-- Віталій: склади, контакти та замовлення
 -- ================================================================
 
 DROP VIEW IF EXISTS location_inventory_summary_view;
@@ -47,10 +89,7 @@ DROP VIEW IF EXISTS positive_feedback_view;
 DROP VIEW IF EXISTS low_stock_inventory_view;
 DROP VIEW IF EXISTS customer_short_info_view;
 
-
--- ----------------------------------------------------------------
--- 1. Horizontal view
--- ----------------------------------------------------------------
+-- Коротка інфо по клієнтах
 CREATE VIEW customer_short_info_view AS
 SELECT 
     customer_id,
@@ -58,10 +97,7 @@ SELECT
     last_name
 FROM customers;
 
-
--- ----------------------------------------------------------------
--- 2. Vertical view
--- ----------------------------------------------------------------
+-- Де закінчуються запаси на складах
 CREATE VIEW low_stock_inventory_view AS
 SELECT 
     location_id,
@@ -71,10 +107,7 @@ SELECT
 FROM location_inventory
 WHERE current_stock <= min_stock_level;
 
-
--- ----------------------------------------------------------------
--- 3. Mixed view
--- ----------------------------------------------------------------
+-- Тільки позитивні відгуки (рейтинг 4 і вище)
 CREATE VIEW positive_feedback_view AS
 SELECT 
     order_id,
@@ -85,10 +118,7 @@ SELECT
 FROM customer_feedback
 WHERE rating >= 4;
 
-
--- ----------------------------------------------------------------
--- 4. View that joins multiple tables
--- ----------------------------------------------------------------
+-- Деталізовані замовлення з усіма зв'язками (JOIN)
 CREATE VIEW detailed_orders_view AS
 SELECT 
     o.order_id,
@@ -109,10 +139,7 @@ JOIN customers c ON o.customer_id = c.customer_id
 JOIN order_items oi ON o.order_id = oi.order_id
 JOIN menu_items m ON oi.menu_item_id = m.menu_item_id;
 
-
--- ----------------------------------------------------------------
--- 5. View using a subquery
--- ----------------------------------------------------------------
+-- Категоризація замовлень за сумою (через підзапит з середнім)
 CREATE VIEW order_price_category_view AS
 SELECT 
     order_id,
@@ -126,10 +153,7 @@ SELECT
     END AS spending_category
 FROM orders;
 
-
--- ----------------------------------------------------------------
--- 6. View using UNION
--- ----------------------------------------------------------------
+-- Зведений список контактів (робітники, постачальники, клієнти через UNION)
 CREATE VIEW company_contacts_view AS
 SELECT 
     'Staff' AS person_type,
@@ -157,12 +181,7 @@ SELECT
 FROM customers
 WHERE phone IS NOT NULL OR email IS NOT NULL;
 
-
--- ----------------------------------------------------------------
--- 7. Layered view (View selecting from another view)
--- ----------------------------------------------------------------
-
--- First layer view
+-- Багаторівневі в'юхи по складах (перший шар і агрегація)
 CREATE VIEW location_inventory_detailed_view AS
 SELECT 
     li.location_id,
@@ -178,7 +197,6 @@ FROM location_inventory li
 JOIN locations l ON li.location_id = l.location_id
 JOIN ingredients i ON li.ingredient_id = i.ingredient_id;
 
--- Second layer view (queries the 'location_inventory_detailed_view')
 CREATE VIEW location_inventory_summary_view AS
 SELECT 
     location_id,
@@ -188,10 +206,7 @@ SELECT
 FROM location_inventory_detailed_view
 GROUP BY location_id, location_name;
 
-
--- ----------------------------------------------------------------
--- 8. View with CHECK OPTION
--- ----------------------------------------------------------------
+-- Тільки активні локації з CHECK OPTION
 CREATE VIEW active_locations_view AS
 SELECT 
     location_id,
@@ -203,24 +218,82 @@ WHERE is_active = true
 WITH CHECK OPTION;
 
 
--- ----------------------------------------------------------------
--- Sample checks
--- ----------------------------------------------------------------
-SELECT * FROM customer_short_info_view LIMIT 5;
-SELECT * FROM low_stock_inventory_view;
-SELECT * FROM positive_feedback_view LIMIT 5;
-SELECT * FROM detailed_orders_view LIMIT 5;
-SELECT * FROM order_price_category_view LIMIT 5;
-SELECT * FROM company_contacts_view LIMIT 10;
-SELECT * FROM location_inventory_summary_view;
-SELECT * FROM active_locations_view;
+-- ================================================================
+-- Олексій: замовлення, міста та резерви
+-- ================================================================
 
+DROP VIEW IF EXISTS city_totals_view;
+DROP VIEW IF EXISTS lviv_orders_view;
+DROP VIEW IF EXISTS orders_details_view;
+DROP VIEW IF EXISTS reservations_view;
+DROP VIEW IF EXISTS customers_view;
+DROP VIEW IF EXISTS orders_view;
 
+-- Тільки базові поля замовлень
+create view orders_view as
+select 
+  order_number
+  ,order_type
+  ,ordered_at
+  ,total_order_amount
+from public.orders;
+
+-- Клієнти без анонімів
+create view customers_view as
+select 
+  first_name
+  ,last_name
+  ,phone
+from public.customers
+where first_name != 'Анонім';
+
+-- Великі бронювання (від 5 гостей)
+create view reservations_view as
+select 
+  reservation_datetime
+  ,guests_count
+from public.reservations
+where guests_count >= 5;
+
+-- Зв'язок замовлень з локаціями та позиціями
+create view orders_details_view as
+SELECT 
+  l.name
+  ,o.order_type
+  ,o.status
+  ,oi.quantity
+  ,oi.item_price
+  ,o.total_order_amount
+FROM orders o
+left join order_items oi on o.order_id = oi.order_id
+left join locations l on l.location_id = o.location_id;
+
+-- Замовлення по Львову (через підзапит)
+create view lviv_orders_view as
+SELECT 
+  'Lviv' as city
+  ,order_number
+  ,order_type
+  ,ordered_at
+  ,total_order_amount
+FROM orders
+where location_id in (select location_id 
+                      from locations
+                      where name like '%Lviv%');
+
+-- Підсумки по містах (на основі іншої в'юшки)
+create view city_totals_view as
+select
+  split_part(name, ' ', 1) as city
+  ,sum(quantity) as total_quantity
+  ,sum(total_order_amount) as total_amount
+from orders_details_view
+group by city
+order by total_amount desc;
 
 
 -- ================================================================
--- Topic: Database Views lesson 10
--- Author: Valerii Kyrpychenko
+-- Валерій: персонал, зміни та графіки
 -- ================================================================
 
 DROP VIEW IF EXISTS scheduled_shifts_view;
@@ -232,11 +305,7 @@ DROP VIEW IF EXISTS active_staff_contacts_view;
 DROP VIEW IF EXISTS open_shifts_view;
 DROP VIEW IF EXISTS staff_directory_view;
 
-
--- ----------------------------------------------------------------
--- 1. Горизонтальне представлення
--- Довідник персоналу без персональних даних (дата народження, контакти).
--- ----------------------------------------------------------------
+-- Довідник персоналу (без особистих даних)
 CREATE VIEW staff_directory_view AS
 SELECT
     staff_id,
@@ -246,11 +315,7 @@ SELECT
     position
 FROM staff;
 
-
--- ----------------------------------------------------------------
--- 2. Вертикальне представлення
--- Лише незавершені зміни (заплановані та поточні).
--- ----------------------------------------------------------------
+-- Тільки відкриті/актуальні зміни
 CREATE VIEW open_shifts_view AS
 SELECT
     shift_id,
@@ -265,11 +330,7 @@ SELECT
 FROM shift_schedules
 WHERE status IN ('SCHEDULED', 'IN_PROGRESS');
 
-
--- ----------------------------------------------------------------
--- 3. Змішане представлення
--- Контакти лише чинних працівників (звільнені мають is_active = false).
--- ----------------------------------------------------------------
+-- Контакти працюючого персоналу
 CREATE VIEW active_staff_contacts_view AS
 SELECT
     staff_id,
@@ -281,11 +342,7 @@ SELECT
 FROM staff
 WHERE is_active = true;
 
-
--- ----------------------------------------------------------------
--- 4. Представлення з JOIN
--- Зміна + працівник + локація, плановані/відпрацьовані години та запізнення.
--- ----------------------------------------------------------------
+-- Повна інфо по змінах (з JOIN та підрахунком годин/запізнень)
 CREATE VIEW shift_details_view AS
 SELECT
     sh.shift_id,
@@ -315,11 +372,7 @@ FROM shift_schedules sh
 JOIN staff     st ON st.staff_id   = sh.staff_id
 JOIN locations l  ON l.location_id = sh.location_id;
 
-
--- ----------------------------------------------------------------
--- 5. Представлення з підзапитом
--- Працівники, які відпрацювали більше середнього (лише COMPLETED зміни).
--- ----------------------------------------------------------------
+-- Хто відпрацював більше середнього (складний підзапит)
 CREATE VIEW staff_above_avg_hours_view AS
 SELECT
     st.staff_id,
@@ -352,11 +405,7 @@ WHERE w.worked_hours > (
     ) t
 );
 
-
--- ----------------------------------------------------------------
--- 6. Представлення з UNION
--- Актуальні зміни (ACTUAL) та історія змін (HISTORY) в одному списку.
--- ----------------------------------------------------------------
+-- Таймлайн змін (об'єднання актуальних та історії через UNION)
 CREATE VIEW shift_timeline_view AS
 SELECT
     'ACTUAL'::text AS shift_group,
@@ -384,11 +433,7 @@ FROM shift_schedules sh
 JOIN staff st ON st.staff_id = sh.staff_id
 WHERE sh.status IN ('COMPLETED', 'NO_SHOW', 'CANCELLED');
 
-
--- ----------------------------------------------------------------
--- 7. Багаторівневе представлення (на основі shift_details_view)
--- Зведення по локаціях: зміни, неявки, запізнення, години.
--- ----------------------------------------------------------------
+-- Зведення по локаціях (багаторівнева в'юха)
 CREATE VIEW location_shift_summary_view AS
 SELECT
     location_id,
@@ -401,11 +446,7 @@ SELECT
 FROM shift_details_view
 GROUP BY location_id, location_name;
 
-
--- ----------------------------------------------------------------
--- 8. Представлення з WITH CHECK OPTION
--- Редагування лише запланованих змін; змінити статус через нього не можна.
--- ----------------------------------------------------------------
+-- Тільки заплановані зміни з CHECK OPTION
 CREATE VIEW scheduled_shifts_view AS
 SELECT
     shift_id,
@@ -420,24 +461,17 @@ WHERE status = 'SCHEDULED'
 WITH CHECK OPTION;
 
 
--- ----------------------------------------------------------------
--- Sample checks
--- ----------------------------------------------------------------
-SELECT * FROM staff_directory_view        ORDER BY location_id, last_name;
-SELECT * FROM open_shifts_view            ORDER BY start_time;
-SELECT * FROM active_staff_contacts_view  ORDER BY location_id;
-SELECT * FROM shift_details_view          ORDER BY start_time;
-SELECT * FROM staff_above_avg_hours_view  ORDER BY worked_hours DESC;
-SELECT * FROM shift_timeline_view         ORDER BY shift_group, start_time;
-SELECT * FROM location_shift_summary_view ORDER BY location_id;
-SELECT * FROM scheduled_shifts_view       ORDER BY start_time;
+-- ================================================================
+-- Демо та перевірки
+-- ================================================================
 
+-- Перевірка роботи в'юшок
+SELECT * FROM menu_horizontal_view;
+SELECT * FROM customer_short_info_view LIMIT 5;
+SELECT * FROM orders_view LIMIT 5;
+SELECT * FROM staff_directory_view ORDER BY location_id, last_name;
 
--- ----------------------------------------------------------------
--- CHECK OPTION tests
--- ----------------------------------------------------------------
-
--- Дозволено: перенесення запланованої зміни (з ROLLBACK)
+-- Тести для перевірки CHECK OPTION (Валерій)
 BEGIN;
 UPDATE scheduled_shifts_view
 SET start_time = start_time + INTERVAL '30 minutes',
@@ -446,7 +480,7 @@ WHERE staff_id = (SELECT staff_id FROM staff WHERE email = 'olena.koval@staff.ex
   AND start_time = '2026-10-06 07:30+03';
 ROLLBACK;
 
--- Заборонено: зміна статусу на COMPLETED
+-- Перевірка блокування зміни статусу через в'юшку
 DO $$
 BEGIN
   UPDATE scheduled_shifts_view
@@ -458,106 +492,3 @@ EXCEPTION
   WHEN with_check_option_violation THEN RAISE NOTICE '[OK] CHECK OPTION (UPDATE): %', SQLERRM;
   WHEN raise_exception             THEN RAISE NOTICE '[FAIL] CHECK OPTION (UPDATE)';
 END $$;
-
--- Заборонено: вставка зміни зі статусом CANCELLED
-DO $$
-BEGIN
-  INSERT INTO scheduled_shifts_view (location_id, staff_id, start_time, end_time, status)
-  SELECT location_id, staff_id, '2026-10-25 09:00+03', '2026-10-25 18:00+03', 'CANCELLED'
-  FROM staff WHERE email = 'olena.koval@staff.example.ua';
-  RAISE EXCEPTION 'not triggered';
-EXCEPTION
-  WHEN with_check_option_violation THEN RAISE NOTICE '[OK] CHECK OPTION (INSERT): %', SQLERRM;
-  WHEN raise_exception             THEN RAISE NOTICE '[FAIL] CHECK OPTION (INSERT)';
-END $$;
-
-
-
-
-
--- ================================================================
--- Topic: Database Views lesson 10
--- Author: Oleksii Antypov
--- ================================================================
-
--- DROP VIEW IF EXISTS orders_view;
--- DROP VIEW IF EXISTS customers_view;
--- DROP VIEW IF EXISTS reservations_view;
--- DROP VIEW IF EXISTS city_totals_view;
--- DROP VIEW IF EXISTS orders_details_view;
--- DROP VIEW IF EXISTS lviv_orders_view;
-
-------------------------------------------------------------------
--- 1. Horizontal view
-------------------------------------------------------------------
-create view orders_view as
-select 
-  order_number
-  ,order_type
-  ,ordered_at
-  ,total_order_amount
-from public.orders;
-
-------------------------------------------------------------------
--- 2. Vertical view
-------------------------------------------------------------------
-create view customers_view as
-select 
-  first_name
-  ,last_name
-  ,phone
-from public.customers
-where first_name != 'Анонім';
-
-------------------------------------------------------------------
--- 3. Mixed view
-------------------------------------------------------------------
-create view reservations_view as
-select 
-  reservation_datetime
-  ,guests_count
-from public.reservations
-where guests_count >= 5;
-
-------------------------------------------------------------------
--- 4. View that joins multiple tables
-------------------------------------------------------------------
-create view orders_details_view as
-SELECT 
-  l.name
-  ,o.order_type
-  ,o.status
-  ,oi.quantity
-  ,oi.item_price
-  ,o.total_order_amount
-FROM orders o
-left join order_items oi on o.order_id = oi.order_id
-left join locations l on l.location_id = o.location_id;
-
-------------------------------------------------------------------
--- 5. View using a subquery
-------------------------------------------------------------------
-create view lviv_orders_view as
-SELECT 
-  'Lviv' as city
-  ,order_number
-  ,order_type
-  ,ordered_at
-  ,total_order_amount
-FROM orders
-where location_id in (select location_id 
-                      from locations
-                      where name like '%Lviv%')
-;
-
-------------------------------------------------------------------
--- 6. Layered view (View selecting from another view)
-------------------------------------------------------------------
-create view city_totals_view as
-select
-  split_part(name, ' ', 1) as city
-  ,sum(quantity) as total_quantity
-  ,sum(total_order_amount) as total_amount
-from orders_details_view
-group by city
-order by total_amount desc;
