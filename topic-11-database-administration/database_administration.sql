@@ -161,3 +161,49 @@ DROP ROLE IF EXISTS analytics_role;
 DROP ROLE IF EXISTS staff_role;
 */
 
+
+-- ================================================================
+-- Topic: Database Views lesson 11
+-- Author: Oleksii Antypov
+-- ================================================================
+
+--Створення ролей
+--read_and_write
+create role developer;
+
+--only_read
+create role bi_user;
+
+--Створення користувачив
+create user Aleksey with password 'a123456';
+create user Oksana with password 'o654321';
+
+--надання прав ролям на таблицю orders
+grant select on orders to bi_user;
+grant all on orders to developer;
+
+--перевірка наданих прав
+SELECT grantee, table_name, privilege_type
+FROM information_schema.table_privileges
+where table_name = 'orders' and grantee in ('developer', 'bi_user')
+order by grantee;
+
+--призначення ролей користувачам
+--Оксана аналітік 
+grant bi_user to oksana;
+
+--Алексей разработчик
+grant developer to aleksey;
+
+-- виключення прав REFERENCES, TRIGGER, TRUNCATE у ролі developer
+revoke REFERENCES, TRIGGER, TRUNCATE on orders from developer;
+
+-- Очищення після тестування:
+/*
+DROP USER IF EXISTS aleksey;
+DROP USER IF EXISTS oksana;
+revoke all on orders from developer;
+DROP ROLE IF EXISTS developer;
+revoke SELECT on orders from bi_user;
+DROP ROLE IF EXISTS bi_user;
+*/
