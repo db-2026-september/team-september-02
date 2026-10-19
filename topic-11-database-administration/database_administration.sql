@@ -31,179 +31,216 @@
 
 -- Add your script below this line
 
--- ================================================================
--- SQL DATABASE ADMINISTRATION (TOPIC 11)
--- Project: Restaurant Management System
--- Fronts Vitaliy
--- ----------------------------------------------------------------
--- 0. CLEANUP (Optional )
--- ----------------------------------------------------------------
+/******************************************************************************
+  DATABASE ADMINISTRATION & ACCESS CONTROL (TOPIC 11)
+  Проєкт: Restaurant Management System
+  Спільний командний внесок:
+    - Maksym Soloviov (Меню та страви: ролі only_read / read_and_write)
+    - Віталій Фронц (Аналітика даних та загальний шаблон адміністрування)
+    - Oleksii Antypov (Управління замовленнями та розробка / developer роль)
+    - Valerii Kyrpychenko (Операційний персонал / керування змінами та DO-тести)
+******************************************************************************/
 
+
+-- ============================================================================
+-- 0. ОЧИЩЕННЯ ТЕСТОВИХ ДАНИХ (Закоментовано за замовчуванням)
+-- ============================================================================
 /*
-REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM analytics_role, staff_role;
-REVOKE USAGE ON SCHEMA public FROM analytics_role, staff_role;
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM analytics_role, staff_role, developer, bi_user;
+REVOKE USAGE ON SCHEMA public FROM analytics_role, staff_role, developer, bi_user;
 
 DROP USER IF EXISTS analyst_user_1;
 DROP USER IF EXISTS staff_user_1;
+DROP USER IF EXISTS aleksey;
+DROP USER IF EXISTS oksana;
+DROP USER IF EXISTS Dima;
+DROP USER IF EXISTS James;
 
 DROP ROLE IF EXISTS analytics_role;
 DROP ROLE IF EXISTS staff_role;
+DROP ROLE IF EXISTS developer;
+DROP ROLE IF EXISTS bi_user;
+DROP ROLE IF EXISTS only_read;
+DROP ROLE IF EXISTS read_and_write;
 */
 
 
--- ----------------------------------------------------------------
--- 1. ROLES CREATION
--- ----------------------------------------------------------------
--- Analytics Role (Read-only access to operational data and views)
-CREATE ROLE analytics_role WITH NOLOGIN;
+-- ============================================================================
+-- 1. СТВОРЕННЯ РОЛЕЙ (Спільна логіка розподілу обов'язків)
+-- ============================================================================
 
--- Staff Role (Operational / Limited DML access for shift management)
-CREATE ROLE staff_role WITH NOLOGIN;
+-- Роль для розробників / повного доступу до керування структурою та даними (Oleksii Antypov)
+CREATE ROLE developer NOLOGIN;
+
+-- Роль бізнес-аналітики для перегляду звітів і замовлень (Oleksii Antypov / Віталій Фронц)
+CREATE ROLE bi_user NOLOGIN;
+
+-- Роль загального читання меню (Maksym Soloviov)
+CREATE ROLE only_read NOLOGIN;
+
+-- Роль редагування меню та операцій (Maksym Soloviov)
+CREATE ROLE read_and_write NOLOGIN;
+
+-- Роль операційного персоналу для планування змін і перегляду довідників (Valerii Kyrpychenko)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'staff_role') THEN
+        CREATE ROLE staff_role NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE;
+    END IF;
+END
+$$;
+
+COMMENT ON ROLE staff_role IS 'Операційне керування змінами: читання довідників, INSERT/UPDATE змін. Без DELETE, без замовлень і клієнтів.';
+
+-- Аналітична роль для доступу до операційних даних та звітів без прав модифікації (Віталій Фронц)
+CREATE ROLE analytics_role NOLOGIN;
 
 
--- ----------------------------------------------------------------
--- 2. USERS CREATION
--- ----------------------------------------------------------------
+-- ============================================================================
+-- 2. СТВОРЕННЯ КОРИСТУВАЧІВ ТА ПРИЗНАЧЕННЯ РОЛЕЙ
+-- ============================================================================
 
+-- Користувачі розробки та бізнес-аналітики (Oleksii Antypov)
+CREATE USER aleksey WITH PASSWORD 'a123456';
+GRANT developer TO aleksey;
+
+CREATE USER oksana WITH PASSWORD 'o654321';
+GRANT bi_user TO oksana;
+
+-- Користувачі меню (Maksym Soloviov)
+CREATE USER Dima WITH PASSWORD 'Dima_pass';
+GRANT only_read TO Dima;
+
+CREATE USER James WITH PASSWORD 'James_pass';
+GRANT read_and_write TO James;
+
+-- Користувачі аналітики та персоналу (Віталій Фронц, Valerii Kyrpychenko)
 CREATE USER analyst_user_1 WITH PASSWORD 'analyst_password_2026';
 GRANT analytics_role TO analyst_user_1;
-
 
 CREATE USER staff_user_1 WITH PASSWORD 'staff_password_2026';
 GRANT staff_role TO staff_user_1;
 
 
--- ----------------------------------------------------------------
--- 3. SCHEMA & TABLE-LEVEL GRANTS (Least Privilege Principle)
--- ----------------------------------------------------------------
+-- ============================================================================
+-- 3. НАДАННЯ ПРАВ ДОСТУПУ (ПРИНЦИП МІНІМАЛЬНИХ ПРИВІЛЕЇВ)
+-- ============================================================================
 
--- Allow schema connection and reading from all tables and views
-GRANT USAGE ON SCHEMA public TO analytics_role;
+-- 3.1. Права для схеми public
+GRANT USAGE ON SCHEMA public TO bi_user, developer, analytics_role, staff_role;
+
+-- 3.2. Права на таблицю замовлень (orders) — Oleksii Antypov
+GRANT SELECT ON orders TO bi_user;
+GRANT ALL ON orders TO developer;
+REVOKE REFERENCES, TRIGGER, TRUNCATE ON orders FROM developer;
+
+-- 3.3. Права на таблицю меню (menu_items) — Maksym Soloviov
+GRANT SELECT ON menu_items TO only_read;
+GRANT SELECT, UPDATE, INSERT ON menu_items TO read_and_write;
+-- DELETE навмисно не видано, щоб не руйнувати зв'язки зі складниками
+
+-- 3.4. Права для аналітичної ролі (analytics_role) — Віталій Фронц
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO analytics_role;
--- Ensure future tables added to public schema are also readable by analytics
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO analytics_role;
 
+-- 3.5. Права для операційного персоналу (staff_role) — Valerii Kyrpychenko
+-- Довідкові дані
+GRANT SELECT ON locations, menu_categories, menu_items TO staff_role;
 
--- --- STAFF ROLE PERMISSIONS ---
-GRANT USAGE ON SCHEMA public TO staff_role;
+-- Персональні дані колег захищено: видаємо доступ лише до безпечних стовпців таблиці staff
+GRANT SELECT (staff_id, location_id, first_name, last_name, position, is_active)
+    ON TABLE staff TO staff_role;
 
--- Staff need to read menu items, locations, and staff directories
-GRANT SELECT ON locations, menu_items, menu_categories, staff TO staff_role;
+-- Повне керування власними графіками змін (читання та створення)
+GRANT SELECT, INSERT ON TABLE shift_schedules TO staff_role;
 
--- Staff need full access on their shift schedules and personal info
-GRANT SELECT, INSERT, UPDATE ON shift_schedules TO staff_role;
+-- Редагування окремих полів розкладу (виключаючи первинний ключ для збереження цілісності)
+GRANT UPDATE (location_id, staff_id, start_time, end_time,
+              actual_start_time, actual_end_time, break_time_minutes, status)
+    ON TABLE shift_schedules TO staff_role;
 
--- Allow usage of sequences (for IDs when inserting shifts if needed)
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO staff_role;
+-- Надання прав на послідовність для вставки нових змін
+DO $$
+BEGIN
+    EXECUTE format('GRANT USAGE ON SEQUENCE %s TO staff_role',
+                   pg_get_serial_sequence('public.shift_schedules', 'shift_id'));
+END
+$$;
 
 
--- ----------------------------------------------------------------
--- 4. REVOKE STATEMENTS (Enforcing strict boundaries)
--- ----------------------------------------------------------------
--- Explicitly revoke sensitive financial data or customer feedback modifications from staff and analytics where unnecessary
-REVOKE UPDATE, DELETE ON orders, order_items FROM staff_role;
+-- ============================================================================
+-- 4. ЖОРСТКЕ ОБМЕЖЕННЯ ПРАВ (REVOKE)
+-- ============================================================================
+
+-- Заборона загального доступу для PUBLIC на критичні таблиці
+REVOKE ALL ON menu_items FROM PUBLIC;
+
+-- Обмеження для аналітиків та персоналу (захист від випадкових модифікацій)
 REVOKE INSERT, UPDATE, DELETE ON customers, customer_feedback FROM analytics_role;
+REVOKE UPDATE, DELETE ON orders, order_items FROM staff_role;
+REVOKE DELETE, TRUNCATE ON TABLE shift_schedules FROM staff_role;
+REVOKE ALL ON TABLE orders, order_items, customers, customer_feedback, reservations FROM staff_role;
 
 
--- ----------------------------------------------------------------
--- 5. TESTING PERMISSIONS & VERIFICATION BLOCKS
--- ----------------------------------------------------------------
-
--- Verify analytics_role can read orders (Expected: SUCCESS)
-SET ROLE analytics_role;
-SELECT COUNT(*) FROM orders;
-RESET ROLE;
-
--- Verify analytics_role CANNOT insert/modify orders
+-- ============================================================================
+-- 5. АВТОМАТИЧНІ ТЕСТИ ПРАВ (DO-БЛОК ПЕРЕВІРКИ)
+-- ============================================================================
+-- Перевірка коректності налаштування прав для операційного персоналу (Valerii Kyrpychenko)
 DO $$
+DECLARE
+    t         record;
+    v_outcome text;
+    v_total   int := 0;
+    v_failed  int := 0;
 BEGIN
-  SET ROLE analytics_role;
-  INSERT INTO customers (first_name, last_name, phone, email) 
-  VALUES ('Hacker', 'Test', '+380000000000', 'hacker@example.com');
-  RESET ROLE;
-  RAISE EXCEPTION 'Test failed: analytics_role was able to insert!';
-EXCEPTION
-  WHEN insufficient_privilege THEN 
-    RESET ROLE;
-    RAISE NOTICE '[OK] analytics_role correctly restricted from INSERT.';
-  WHEN OTHERS THEN 
-    RESET ROLE;
-    RAISE NOTICE '[NOTE] Caught expected restriction error: %', SQLERRM;
-END $$;
+    FOR t IN
+        SELECT * FROM (VALUES
+            ('staff_user_1', $q$SELECT * FROM shift_schedules LIMIT 1$q$,
+                'ALLOWED', 'персонал може читати shift_schedules'),
+            ('staff_user_1', $q$SELECT first_name, last_name, position FROM staff$q$,
+                'ALLOWED', 'персонал може читати імена та посади колег'),
+            ('staff_user_1', $q$SELECT birth_date FROM staff$q$,
+                'DENIED',  'персонал не може читати персональні дані колег'),
+            ('staff_user_1', $q$SELECT * FROM orders$q$,
+                'DENIED',  'персонал не може читати замовлення'),
+            ('staff_user_1', $q$SELECT * FROM customers$q$,
+                'DENIED',  'персонал не може читати дані клієнтів')
+        ) AS x(usr, stmt, expected, descr)
+    LOOP
+        v_total   := v_total + 1;
+        v_outcome := NULL;
 
--- Verify staff_role can update shift schedules
-DO $$
-BEGIN
-  SET ROLE staff_user_1;
-  -- Test query check
-  PERFORM * FROM shift_schedules LIMIT 1;
-  RESET ROLE;
-  RAISE NOTICE '[OK] staff_role can query shift schedules.';
-EXCEPTION
-  WHEN OTHERS THEN
-    RESET ROLE;
-    RAISE NOTICE '[FAIL] staff_role query failed: %', SQLERRM;
-END $$;
+        BEGIN
+            EXECUTE format('SET LOCAL ROLE %I', t.usr);
+            EXECUTE t.stmt;
+            v_outcome := 'ALLOWED';
+            RAISE EXCEPTION 'відкат тесту' USING ERRCODE = 'RB001';
+        EXCEPTION
+            WHEN SQLSTATE 'RB001' THEN
+                NULL;
+            WHEN insufficient_privilege THEN
+                v_outcome := 'DENIED';
+            WHEN OTHERS THEN
+                IF SQLSTATE LIKE '23%' THEN
+                    v_outcome := 'ALLOWED';
+                ELSE
+                    v_outcome := 'ПОМИЛКА: ' || SQLERRM;
+                END IF;
+        END;
 
+        IF v_outcome = t.expected THEN
+            RAISE NOTICE '[PASS] #% %: % -> %', v_total, t.usr, t.descr, v_outcome;
+        ELSE
+            v_failed := v_failed + 1;
+            RAISE NOTICE '[FAIL] #% %: % -> очікувалось %, отримано %',
+                         v_total, t.usr, t.descr, t.expected, v_outcome;
+        END IF;
+    END LOOP;
 
--- ----------------------------------------------------------------
--- 6. OPTIONAL CLEANUP BLOCK (After evaluation)
--- ----------------------------------------------------------------
-/*
-REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM analytics_role;
-REVOKE SELECT, INSERT, UPDATE ON shift_schedules FROM staff_role;
-REVOKE USAGE ON SCHEMA public FROM analytics_role, staff_role;
+    RAISE NOTICE 'Тести прав завершено: % успішних, % невдалих', v_total - v_failed, v_failed;
 
-DROP USER IF EXISTS analyst_user_1;
-DROP USER IF EXISTS staff_user_1;
-
-DROP ROLE IF EXISTS analytics_role;
-DROP ROLE IF EXISTS staff_role;
-*/
-
-
--- ================================================================
--- Topic: Database Views lesson 11
--- Author: Oleksii Antypov
--- ================================================================
-
---Створення ролей
---read_and_write
-create role developer;
-
---only_read
-create role bi_user;
-
---Створення користувачив
-create user Aleksey with password 'a123456';
-create user Oksana with password 'o654321';
-
---надання прав ролям на таблицю orders
-grant select on orders to bi_user;
-grant all on orders to developer;
-
---перевірка наданих прав
-SELECT grantee, table_name, privilege_type
-FROM information_schema.table_privileges
-where table_name = 'orders' and grantee in ('developer', 'bi_user')
-order by grantee;
-
---призначення ролей користувачам
---Оксана аналітік 
-grant bi_user to oksana;
-
---Алексей разработчик
-grant developer to aleksey;
-
--- виключення прав REFERENCES, TRIGGER, TRUNCATE у ролі developer
-revoke REFERENCES, TRIGGER, TRUNCATE on orders from developer;
-
--- Очищення після тестування:
-/*
-DROP USER IF EXISTS aleksey;
-DROP USER IF EXISTS oksana;
-revoke all on orders from developer;
-DROP ROLE IF EXISTS developer;
-revoke SELECT on orders from bi_user;
-DROP ROLE IF EXISTS bi_user;
-*/
+    IF v_failed > 0 THEN
+        RAISE EXCEPTION 'Не пройдено тестів прав: %', v_failed;
+    END IF;
+END
+$$;
